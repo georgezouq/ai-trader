@@ -1,0 +1,6 @@
+# Dirs.
+.idea
+*.log
+*.ipynb_checkpoints
+*.local
+.DS_Store
