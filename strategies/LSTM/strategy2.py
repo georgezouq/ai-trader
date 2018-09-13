@@ -1,13 +1,8 @@
-# 可以自己import我们平台支持的第三方python模块，比如pandas、numpy等。
-import pandas as pd
-import numpy as np
-from datetime import timedelta
 from pybrain.datasets import SequentialDataSet
 from pybrain.tools.shortcuts import buildNetwork
-from pybrain.structure.networks import Network
 from pybrain.structure.modules import ReluLayer, LSTMLayer
 from pybrain.supervised import RPropMinusTrainer
-import math
+from rqalpha.api import *
 
 
 # 训练trainX和trainY，并返回神经网络net
@@ -26,10 +21,10 @@ def train(context, trainX, trainY):
 
 # 更新数据集data
 def load(context, ticker):
-    close = history(90, '1d', 'close')[ticker]
-    high = history(90, '1d', 'high')[ticker]
-    low = history(90, '1d', 'low')[ticker]
-    volume = history(90, '1d', 'volume')[ticker]
+    close = history_bar(90, '1d', 'close')[ticker]
+    high = history_bar(90, '1d', 'high')[ticker]
+    low = history_bar(90, '1d', 'low')[ticker]
+    volume = history_bar(90, '1d', 'volume')[ticker]
     data = pd.DataFrame({'close': close.values,
                          'high': high.values,
                          'low': low.values,
@@ -103,7 +98,7 @@ def modelize(context, bar_dict):
 
 def mkt_panic():
     # 连续两天大盘跌破3个点，或者大盘跌破5个点
-    mkt = history(3, '1d', 'close')['000001.XSHG']
+    mkt = history_bar(3, '1d', 'close')['000001.XSHG']
     panic = (mkt[-1] / mkt[-2] < 0.97 and mkt[-2] / mkt[-3] < 0.97) or mkt[-1] / mkt[-2] < 0.95
     if panic:
         print('!!!!!!' + '{:!^59}'.format('panic'))
@@ -128,15 +123,15 @@ def trade(context, bar_dict):
 
     for i in range(context.num):
         actual_close.append(
-            (history(1, '1d', 'close')[context.list[i]][0] - context.position_ratio[i][0]) / context.shape_ratio[i][0])
+            (history_bar(1, '1d', 'close')[context.list[i]][0] - context.position_ratio[i][0]) / context.shape_ratio[i][0])
         actual_high.append(
-            (history(1, '1d', 'high')[context.list[i]][0] - context.position_ratio[i][1]) / context.shape_ratio[i][1])
+            (history_bar(1, '1d', 'high')[context.list[i]][0] - context.position_ratio[i][1]) / context.shape_ratio[i][1])
         actual_low.append(
-            (history(1, '1d', 'low')[context.list[i]][0] - context.position_ratio[i][2]) / context.shape_ratio[i][2])
+            (history_bar(1, '1d', 'low')[context.list[i]][0] - context.position_ratio[i][2]) / context.shape_ratio[i][2])
         actual_vol.append(
-            (history(1, '1d', 'volume')[context.list[i]][0] - context.position_ratio[i][3]) / context.shape_ratio[i][3])
+            (history_bar(1, '1d', 'volume')[context.list[i]][0] - context.position_ratio[i][3]) / context.shape_ratio[i][3])
         actual_open.append(
-            (history(1, '1m', 'close')[context.list[i]][0] - context.position_ratio[i][0]) / context.shape_ratio[i][0])
+            (history_bar(1, '1m', 'close')[context.list[i]][0] - context.position_ratio[i][0]) / context.shape_ratio[i][0])
         actual_data.append([actual_close[i], actual_high[i], actual_low[i], actual_vol[i]])
         predict_close.append(context.net[i].activate(actual_data[i])[0])
 
